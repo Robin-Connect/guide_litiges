@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guide Litiges Artisan</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh;padding:1.5rem 1rem}
+  .container{max-width:700px;margin:0 auto}
+  h1{font-size:20px;font-weight:600;margin-bottom:4px}
+  .subtitle{font-size:13px;color:#888;margin-bottom:1.25rem}
+  .nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem}
+  .nav button{font-size:13px;padding:6px 16px;border-radius:20px;border:1px solid #ddd;background:#fff;color:#555;cursor:pointer;transition:all 0.15s;font-weight:500}
+  .nav button:hover{border-color:#999;color:#1a1a1a}
+  .nav button.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+  .litige-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .litige-header{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none;flex-wrap:wrap}
+  .litige-header:hover{background:#fafaf8}
+  .litige-severity{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;padding:3px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+  .sev-rouge{background:#FCEBEB;color:#A32D2D}
+  .sev-orange{background:#FAEEDA;color:#633806}
+  .sev-jaune{background:#FFFBEA;color:#6b4c00}
+  .litige-title{font-size:14px;font-weight:500;color:#1a1a1a;flex:1;min-width:180px}
+  .pill{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid #e0e0e0;background:#f5f5f3;color:#555;display:inline-block}
+  .pill.resp-artisan{background:#FAEEDA;border-color:#EF9F27;color:#633806}
+  .pill.resp-toi{background:#E6F1FB;border-color:#85B7EB;color:#0C447C}
+  .pill.resp-partage{background:#EEEDFE;border-color:#AFA9EC;color:#3C3489}
+  .pill.resp-client{background:#EAF3DE;border-color:#97C459;color:#27500A}
+  .chevron{width:16px;height:16px;color:#aaa;transition:transform 0.2s;flex-shrink:0}
+  .chevron.open{transform:rotate(90deg)}
+  .litige-body{display:none;padding:0 16px 16px;border-top:1px solid #f0f0ec}
+  .litige-body.open{display:block}
+  .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#aaa;margin:14px 0 6px}
+  .contexte{font-size:13px;color:#666;line-height:1.6;margin-bottom:4px}
+  .response-block{background:#f9f9f7;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.6;color:#333;margin-bottom:8px}
+  .who{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+  .who-client{color:#0C447C}
+  .who-artisan{color:#633806}
+  .prevent-block{background:#f0faf4;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.6;color:#145a2a;border-left:3px solid #2d9e5c}
+  .prevent-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;color:#0e4a20}
+  .footer{margin-top:2rem;font-size:12px;color:#bbb;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Guide litiges</h1>
+  <p class="subtitle">Réponses préparées par situation — usage hors ligne</p>
+  <div class="nav" id="nav"></div>
+  <div id="content"></div>
+  <div class="footer">Guide Litiges Artisan — usage hors ligne</div>
+</div>
+<script>
+const CHEVRON='<svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+const domains={
+  'Facturation':[
+    {
+      title:"Prix final supérieur à l'estimation annoncée",
+      sev:'rouge',sev_label:'Litige fréquent',
+      resp:['resp-partage'],resp_labels:['Responsabilité partagée'],
+      contexte:"Tu as annoncé une fourchette au client, l'artisan a facturé au-delà. Le client se sent trompé.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je comprends votre surprise sur le montant. L'estimation que je vous avais donnée était indicative et basée sur les informations disponibles par téléphone. L'artisan a pu constater sur place des éléments qui ont modifié le périmètre de l'intervention. Je contacte l'artisan pour avoir les détails et je reviens vers vous."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client m'a contacté au sujet de la facture — l'écart avec mon estimation est important. Peux-tu me détailler les raisons de ce dépassement ? Je dois pouvoir l'expliquer au client. Si l'écart n'est pas justifié, je t'invite à faire un geste commercial."},
+      prev:"Toujours mentionner 'hors fournitures et selon complexité sur place' lors de l'annonce. Tracer l'estimation dans Sheets à la saisie. Si l'écart dépasse 30%, l'artisan doit prévenir le client avant de facturer."
+    },
+    {
+      title:"Commission contestée par l'artisan",
+      sev:'orange',sev_label:'Litige potentiel',
+      resp:['resp-toi'],resp_labels:['À défendre'],
+      contexte:"L'artisan conteste la commission sur une mission qu'il considère comme un client existant ou une intervention non générée par toi.",
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"La commission s'applique sur les missions captées pendant tes indisponibilités via le transfert d'appel — c'est ce qu'on a convenu ensemble. Pour cette mission, voici les éléments : [date de l'appel, heure, ID mission]. Si tu penses que c'est un client existant, dis-le moi avec les éléments et on en discute."},
+      prev:"Documenter chaque mission avec l'horodatage de l'appel transféré et le statut Client_Nouveau dès la saisie. Avoir un accord écrit avec l'artisan avant de démarrer."
+    },
+    {
+      title:"Double facturation ou facturation sans intervention",
+      sev:'rouge',sev_label:'Litige grave',
+      resp:['resp-artisan'],resp_labels:['Responsabilité artisan'],
+      contexte:"Le client affirme avoir payé mais l'intervention n'a pas eu lieu, ou a été facturée deux fois.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je prends ce point très au sérieux. Je contacte l'artisan immédiatement pour vérifier les éléments de facturation. Si une erreur est confirmée, vous serez remboursé de la somme en trop dans les plus brefs délais."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client signale un problème de facturation sérieux. J'ai besoin de la facture émise et de la preuve d'intervention pour cette mission. Si une erreur s'est produite, il faut la corriger rapidement — ce type de situation peut nuire à ta réputation et à notre collaboration."},
+      prev:"Toujours tracer l'Event_ID Calendar comme preuve d'intervention planifiée. Encourager les artisans à prendre une photo ou note de fin d'intervention."
+    }
+  ],
+  'Qualité travaux':[
+    {
+      title:"Panne ou fuite récidivante après intervention",
+      sev:'rouge',sev_label:'Litige fréquent',
+      resp:['resp-artisan'],resp_labels:['Responsabilité artisan'],
+      contexte:"Le problème signalé est revenu dans les jours ou semaines suivant l'intervention. Le client veut un retour gratuit.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je comprends votre mécontentement. L'artisan reviendra corriger la situation — c'est dans son intérêt et le nôtre. Je le contacte maintenant pour organiser un créneau rapide. Si la cause est liée à son intervention, ce retour ne vous sera pas facturé."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client signale une récidive sur la mission du [date]. Il faut organiser un retour rapidement — si la cause est liée à ton intervention, ce retour doit être sans frais pour le client. Ça protège ta réputation et évite un litige plus sérieux."},
+      prev:"Rappeler systématiquement aux artisans de tester l'installation avant de partir. Proposer une garantie de retour de 30 jours sur les interventions standard."
+    },
+    {
+      title:"Travaux jugés bâclés ou incomplets",
+      sev:'orange',sev_label:'Litige subjectif',
+      resp:['resp-artisan'],resp_labels:['Subjectif'],
+      contexte:"Le client n'est pas satisfait de la qualité perçue, mais sans dommage objectif visible.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je prends note de votre retour. Pour pouvoir évaluer la situation correctement, pouvez-vous me décrire précisément ce qui ne vous convient pas, idéalement avec une photo si possible ? Je transmets à l'artisan et reviens vers vous."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client signale une insatisfaction sur la qualité de l'intervention. Peux-tu me décrire ce qui a été fait et dans quelles conditions ? S'il y a un désaccord, un retour pour vérification reste toujours la meilleure option pour éviter un mauvais avis."},
+      prev:"Encourager les artisans à faire valider le travail par le client avant de partir. Documenter l'intervention avec une note ou photo."
+    },
+    {
+      title:"Dégât causé pendant l'intervention",
+      sev:'rouge',sev_label:'Litige grave',
+      resp:['resp-artisan'],resp_labels:['RC Pro artisan'],
+      contexte:"L'artisan a cassé ou endommagé quelque chose chez le client pendant son intervention.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je suis désolé de cette situation. Les artisans avec qui je travaille sont tous couverts par une assurance responsabilité civile professionnelle. Je transmets votre demande à l'artisan et à son assurance si nécessaire. Pouvez-vous me faire parvenir des photos des dégâts ?"},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client signale un dégât causé pendant ton intervention. Je t'invite à le contacter directement pour constater et prendre en charge via ta RC Pro. Tiens-moi informé du suivi — je dois pouvoir rassurer le client sur l'avancement."},
+      prev:"Vérifier que chaque artisan du réseau est bien couvert en RC Pro avant tout début de collaboration. Le noter dans l'onglet ARTISANS."
+    }
+  ],
+  'Planning':[
+    {
+      title:"Artisan absent au créneau convenu",
+      sev:'rouge',sev_label:'Litige fréquent',
+      resp:['resp-partage'],resp_labels:['Responsabilité partagée'],
+      contexte:"Le client avait pris sa journée ou attendu l'artisan qui n'est pas venu, sans prévenir.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je vous présente mes excuses pour cette absence non signalée — ce n'est pas acceptable. Je contacte l'artisan immédiatement pour comprendre ce qui s'est passé et je vous propose un nouveau créneau prioritaire dès que possible. Si vous avez subi une contrainte particulière (journée posée, congé), merci de me le préciser."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client t'attendait ce [date/heure] et tu n'es pas venu sans prévenir. C'est une situation que je ne peux pas accepter — elle nuit au client et à notre crédibilité. J'ai besoin d'une explication et d'une disponibilité rapide pour reprogrammer en priorité. Deux absences non signalées et je réduis le volume de missions que je t'envoie."},
+      prev:"Rappel automatique J-1 et H-2 avant chaque intervention. Exiger une confirmation de présence de l'artisan le matin. Documenter les absences dans le score artisan."
+    },
+    {
+      title:"Retard important sans prévenir",
+      sev:'jaune',sev_label:'Litige mineur',
+      resp:['resp-artisan'],resp_labels:['Responsabilité artisan'],
+      contexte:"L'artisan arrive avec 1h ou plus de retard. Le client s'impatiente et te contacte.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je contacte l'artisan pour avoir une heure d'arrivée précise et je vous rappelle dans 5 minutes. Si le retard est trop important et que vous ne pouvez pas attendre, on reprogramme sur un créneau qui vous convient."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client attend depuis [durée]. Peux-tu me donner une heure d'arrivée précise maintenant ? Pour les prochaines missions, merci de me prévenir dès que tu sais que tu vas être en retard — je gère la communication client, mais j'ai besoin de l'info en temps réel."},
+      prev:"Intégrer dans le planning des marges de 30 min entre interventions. Rappeler aux artisans que tout retard prévisible doit être signalé immédiatement."
+    },
+    {
+      title:"Créneau annulé au dernier moment",
+      sev:'orange',sev_label:'Litige potentiel',
+      resp:['resp-partage'],resp_labels:['Plan B nécessaire'],
+      contexte:"L'artisan annule le jour J. Le client est bloqué, surtout si c'est une urgence.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"L'artisan ne peut finalement pas intervenir aujourd'hui — je m'en excuse. Je cherche une solution alternative immédiatement et je vous rappelle dans 15 minutes avec un autre créneau ou un autre artisan disponible."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Cette annulation de dernière minute me met dans une position difficile vis-à-vis du client. J'ai besoin de comprendre pourquoi pour ne pas que ça se reproduise. Pour info, les annulations J-0 sans raison majeure sont notées dans ton score et affectent le volume de missions que je te confie."},
+      prev:"Toujours avoir un artisan de secours identifié sur la même zone. Activer le pool de secours dès l'annulation reçue, ne pas attendre de trouver soi-même."
+    }
+  ],
+  'Relation client':[
+    {
+      title:"Client qui découvre qu'il n'a pas parlé à l'artisan directement",
+      sev:'orange',sev_label:'Litige positionnel',
+      resp:['resp-toi'],resp_labels:['Gestion positionnement'],
+      contexte:"Le client réalise qu'il a parlé à un intermédiaire et non à l'artisan. Il peut se sentir trompé.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je suis le service de coordination de [nom artisan] — je gère ses appels et son planning pour qu'il puisse se concentrer sur ses interventions. Tout ce que nous avons convenu ensemble est valide et transmis à l'artisan. Est-ce qu'il y a quelque chose qui vous pose problème dans le suivi ?"},
+      prev:"Préparer une ligne narrative claire avant de démarrer. Ne jamais se présenter comme l'artisan lui-même. En cas de question directe, cadrer comme 'service de coordination' sans mentir."
+    },
+    {
+      title:"Mauvaise communication artisan / client sur place",
+      sev:'jaune',sev_label:'Litige relationnel',
+      resp:['resp-artisan'],resp_labels:['Responsabilité artisan'],
+      contexte:"L'artisan a été impoli, peu explicatif, ou a laissé le client sans information pendant l'intervention.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je suis désolé que l'échange ne se soit pas passé comme attendu. Ce retour est important pour moi — je le transmets à l'artisan. Est-ce qu'il y a eu un problème technique ou uniquement relationnel ?"},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client m'a remonté une insatisfaction sur la communication lors de ton intervention. Pas de problème sur la qualité technique, mais sur le relationnel. Je te rappelle que le client s'attend à un minimum d'explication sur ce que tu fais et pourquoi."},
+      prev:"Rappeler aux artisans lors de l'onboarding : expliquer ce qu'on fait avant de le faire, valider avec le client à la fin."
+    },
+    {
+      title:"Client qui tente de court-circuiter pour éviter la commission",
+      sev:'orange',sev_label:'Risque structurel',
+      resp:['resp-toi'],resp_labels:['Cadre contractuel'],
+      contexte:"Le client rappelle directement l'artisan pour les prochaines interventions, en contournant le système.",
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Si un client capté via le service te recontacte directement sur les 12 prochains mois, la commission s'applique toujours — c'est ce qu'on a convenu ensemble. Si ce n'est pas respecté, je ne peux plus t'envoyer de nouvelles missions."},
+      prev:"Prévoir une clause claire dans l'accord artisan : commission applicable sur tout client capté via le service, pendant 12 mois, même en contact direct. À signer avant de démarrer."
+    }
+  ],
+  'Technique':[
+    {
+      title:"Estimation de durée très éloignée de la réalité",
+      sev:'jaune',sev_label:"Litige d'estimation",
+      resp:['resp-toi'],resp_labels:['Responsabilité toi'],
+      contexte:"Tu as annoncé 1h, l'artisan en a eu pour 3h. Le client conteste la durée facturée.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"L'estimation que je vous avais donnée était basée sur les informations disponibles à distance. L'artisan a découvert sur place une complexité supplémentaire qui a allongé l'intervention. Je vous transmets le détail de ce qui a été fait pour que vous puissiez valider."},
+      prev:"Toujours annoncer des fourchettes, jamais des durées fixes. Ajouter 'sous réserve de la découverte sur place' systématiquement. Sur les interventions complexes, ne jamais annoncer de durée."
+    },
+    {
+      title:"Intervention réalisée sans accord préalable sur le prix",
+      sev:'rouge',sev_label:'Litige grave',
+      resp:['resp-artisan'],resp_labels:['Responsabilité artisan'],
+      contexte:"L'artisan a réalisé des travaux supplémentaires non discutés et les a facturés sans accord client.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Tout travail supplémentaire aurait dû vous être soumis avant réalisation — c'est une règle que j'impose à tous les artisans du réseau. Je contacte l'artisan pour clarifier la situation. Si les travaux n'ont pas été validés par vous, la facturation de ce surplus est contestable."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le client conteste les travaux supplémentaires facturés. La règle est claire : tout dépassement de périmètre doit être validé par le client avant réalisation. Si ce n'a pas été fait, je t'invite fortement à trouver un arrangement avec lui."},
+      prev:"Rappeler aux artisans lors de l'onboarding : zéro travail supplémentaire sans accord verbal explicite du client. Idéalement un SMS de confirmation."
+    },
+    {
+      title:"Mauvais diagnostic initial ayant entraîné une intervention inutile",
+      sev:'orange',sev_label:"Litige d'expertise",
+      resp:['resp-partage'],resp_labels:['Responsabilité partagée'],
+      contexte:"L'artisan est intervenu sur la mauvaise cause, le problème persiste, le client a payé pour rien.",
+      rc:{who:'who-client',lbl:'Réponse au client',txt:"Je comprends votre frustration — une intervention qui ne résout pas le problème est inacceptable. L'artisan doit revenir diagnostiquer correctement et trouver la vraie cause, sans frais supplémentaires pour vous."},
+      ra:{who:'who-artisan',lbl:"Message à l'artisan",txt:"Le problème persiste après ton intervention — le client est mécontent à juste titre. Tu dois revenir sans facturer de nouveau déplacement pour identifier la vraie cause. Un retour rapide et gratuit limite la casse sur ta réputation."},
+      prev:"Sur les diagnostics complexes ou incertains, toujours mentionner en VALIDATION dans l'outil de diagnostic. Ne jamais annoncer un diagnostic définitif au téléphone."
+    }
+  ]
+};
+
+const domainKeys=Object.keys(domains);
+let current=domainKeys[0];
+
+function renderNav(){
+  const nav=document.getElementById('nav');
+  nav.innerHTML='';
+  domainKeys.forEach(d=>{
+    const btn=document.createElement('button');
+    btn.textContent=d;
+    btn.classList.toggle('active',d===current);
+    btn.onclick=()=>{current=d;renderNav();renderContent()};
+    nav.appendChild(btn);
+  });
+}
+
+function renderContent(){
+  const el=document.getElementById('content');
+  el.innerHTML='';
+  domains[current].forEach(l=>{
+    const card=document.createElement('div');
+    card.className='litige-card';
+    const header=document.createElement('div');
+    header.className='litige-header';
+    const pills=l.resp_labels.map((r,i)=>`<span class="pill ${l.resp[i]}">${r}</span>`).join(' ');
+    header.innerHTML=`<span class="litige-severity ${l.sev==='rouge'?'sev-rouge':l.sev==='orange'?'sev-orange':'sev-jaune'}">${l.sev_label}</span><span class="litige-title">${l.title}</span><span style="display:flex;gap:4px;flex-wrap:wrap">${pills}</span>${CHEVRON}`;
+    const body=document.createElement('div');
+    body.className='litige-body';
+    let html=`<div class="section-label">Contexte</div><div class="contexte">${l.contexte}</div>`;
+    if(l.rc) html+=`<div class="section-label">Réponse au client</div><div class="response-block"><div class="who ${l.rc.who}">${l.rc.lbl}</div>${l.rc.txt}</div>`;
+    if(l.ra) html+=`<div class="section-label">Message à l'artisan</div><div class="response-block"><div class="who ${l.ra.who}">${l.ra.lbl}</div>${l.ra.txt}</div>`;
+    if(l.prev) html+=`<div class="prevent-block"><div class="prevent-label">Prévention</div>${l.prev}</div>`;
+    body.innerHTML=html;
+    let open=false;
+    header.onclick=()=>{open=!open;body.classList.toggle('open',open);header.querySelector('.chevron').classList.toggle('open',open)};
+    card.appendChild(header);card.appendChild(body);el.appendChild(card);
+  });
+}
+
+renderNav();renderContent();
+</script>
+</body>
+</html>
